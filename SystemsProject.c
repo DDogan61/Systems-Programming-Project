@@ -82,12 +82,7 @@ void round_even_binary(char *bin) {
 }
 
 double floatingPoint(char* s, int bias, int expsize, int fraction){
-    int i,size=(expsize-4)/2+1;
-    /*for(i=0;i<size;i++){
-        if(i<)
-    }*/
-    
-    i=1;
+    int i=1;
     int exp=-bias;
     //calculating exponent 
     while(i<=expsize){
@@ -99,6 +94,16 @@ double floatingPoint(char* s, int bias, int expsize, int fraction){
     if(exp==-bias){
         res=0;
         exp++;
+    }else if(exp==bias+1){
+        int last=expsize+fraction;
+        for(;i<last;i++){
+            if((s[i]-'0')==1){
+                if((s[0]-'0')==0)return NAN;
+                return -NAN;
+            }
+        }
+        if((s[0]-'0')==0)return INFINITY;
+        return -INFINITY;
     }
     else {
         res=pow(2,exp);
@@ -117,23 +122,32 @@ double floatingPoint(char* s, int bias, int expsize, int fraction){
         i++;
     }
     //sign configuration
-    if((s[0]-'0')==1){
-        if(log10(res)>30)res=INFINITY;
-        res=-res;
-    }
-    if(log10(res)>30)res=INFINITY;
+    if((s[0]-'0')==1)return-res;
     return res;
 }
 
 int main(int argc, char *argv[]) {
-    /*if(argc!=5){
-        printf("Error: Argument count must be 4.");
-        return 0;
-    }*/
-    char endianType = 'l';
-	char *dataType = "fp";
-	int size = 4;
-	
+    if(argc!=5){
+        puts("Error: Argument count must be 4.");
+        return 1;
+    }
+    char *endianType = argv[2];
+	char *dataType = argv[3];
+	int size = (argv[4][0])-'0';
+    if(strcmp(endianType,"l")!=0 && strcmp(endianType,"b")!=0){
+        printf("Error: Invalid endian type. Enter l or b.");
+        return 2;
+    }
+    if(strcmp(dataType,"fp")!=0 && strcmp(dataType,"i")!=0 && strcmp(dataType,"u")!=0){
+        printf("Error: Invalid data type. Enter fp, i or u.");
+        return 3;
+    }
+    if(size<1 || size>4){
+        printf("Error: Invalid size. Enter 1, 2, 3 or 4.");
+        return 4;
+    }
+
+
     int bias, exponent, fraction;
     if(strcmp(dataType,"fp")==0){
         if(size == 1){//8 bits
@@ -148,16 +162,18 @@ int main(int argc, char *argv[]) {
             exponent = 8;
             fraction = 15;
             bias = 127;
-        } else if (size == 4){//32 bits
+        } else {//32 bits
             exponent = 10;
             fraction = 21;
             bias = 511;
-        } else {
-            printf("Error: Invalid size");
-            return 0;
         }
     }
-    FILE *inputfile=fopen("input.txt","r");
+    FILE *inputfile=fopen(argv[1],"r");
+    if(inputfile==NULL){
+        printf("Error: Program could not open specified input file for read.");
+        return 5;
+    }
+    FILE *outputfile=fopen("output.txt","w");
     char *input=calloc(BUFFER_SIZE,sizeof(char));
     char *tokens[MAX_TOKENS]; // Array to store tokens
     char binaries[MAX_TOKENS][MAX_BINARY_LEN];
@@ -180,7 +196,7 @@ int main(int argc, char *argv[]) {
             token = strtok(NULL, " ");
         }
         
-        if(endianType == 'l'){
+        if(strcmp(endianType,"l")==0){
             for (i = 0; i < count; i += size) {
                 char lineBuffer[BUFFER_SIZE] = "";
             
@@ -190,9 +206,9 @@ int main(int argc, char *argv[]) {
                 }
                 if(strcmp(dataType, "fp") == 0){
                     //Add floating point code here
-                    printf("%g\n",floatingPoint(lineBuffer,bias,exponent,fraction));
+                    fprintf(outputfile,"%-12g ",floatingPoint(lineBuffer,bias,exponent,fraction));
                 } else if (strcmp(dataType, "u") == 0){
-                    printf("%d ", binaryToInt(lineBuffer, 8 * size));
+                    fprintf(outputfile,"%d ", binaryToInt(lineBuffer, 8 * size));
                 } else {
                     int sign;
                     if(lineBuffer[0] == '1'){
@@ -201,7 +217,7 @@ int main(int argc, char *argv[]) {
                         sign = 1;
                     }
                     int result = sign * binaryToInt(lineBuffer + 1, 8 * size - 1);
-                    printf("%d ", result);
+                    fprintf(outputfile,"%d ", result);
                 }
                 
             }
@@ -213,13 +229,13 @@ int main(int argc, char *argv[]) {
                 for (j = i; j < end; j++) {  // Read in reverse order
                     strcat(lineBuffer, binaries[j]); 
                 }
-                printf("%s\n", lineBuffer); // Newline after each subdivision
+                fprintf(outputfile,"%s\n", lineBuffer); // Newline after each subdivision
                 
                 if(strcmp(dataType, "fp") == 0){
                     //Add floating point code here
-                    printf("%g\n",floatingPoint(lineBuffer,bias,exponent,fraction));
+                    fprintf(outputfile,"%-12g\n",floatingPoint(lineBuffer,bias,exponent,fraction));
                 } else if (strcmp(dataType, "u") == 0){
-                    printf("%d ", binaryToInt(lineBuffer, 8 * size));
+                    fprintf(outputfile,"%d ", binaryToInt(lineBuffer, 8 * size));
                 } else {
                     int sign;
                     if(lineBuffer[0] == '1'){
@@ -228,11 +244,13 @@ int main(int argc, char *argv[]) {
                         sign = 1;
                     }
                     int result = sign * binaryToInt(lineBuffer + 1, 8 * size - 1);
-                    printf("%d ", result);
+                    fprintf(outputfile,"%d ", result);
                 }
             }
         }
-        printf("\n");
-    }   
+        fprintf(outputfile,"\n");
+    }
+    fclose(inputfile);
+    fclose(outputfile);   
     return 0;
 }
