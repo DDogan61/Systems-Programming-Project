@@ -41,8 +41,8 @@ void hexToBinary(const char *hex, char *binary) {
     }
 }
 /*Function for converting Binary to Integer*/
-unsigned int binaryToInt(char *binary, int length) {
-    unsigned int decimal = 0;
+unsigned long int binaryToInt(char *binary, int length) {
+    unsigned long int decimal = 0;
     int count = 0;
     while (*binary && count < length) {
         decimal = decimal * 2 + (*binary - '0');
@@ -236,8 +236,8 @@ int main(int argc, char *argv[]) {
                 /*Send the data to the functions according to dataType*/
                 if(strcmp(dataType, "fp") == 0){/*Floating point*/
                     fprintf(outputfile,"%-12g ",floatingPoint(lineBuffer,bias,exponent,fraction));
-                } else if (strcmp(dataType, "u") == 0){/*Unsigned*/
-                    fprintf(outputfile,"%d ", binaryToInt(lineBuffer, 8 * size));
+                } else if (dataType[0] == 'u'){/*Unsigned*/
+                    fprintf(outputfile,"%u ", binaryToInt(lineBuffer, 8 * size));
                 } else {/*2's complement integer*/
                     fprintf(outputfile,"%d ", twosComplement(lineBuffer, size));
                 }
@@ -256,7 +256,7 @@ int main(int argc, char *argv[]) {
                 if(strcmp(dataType, "fp") == 0){/*Floating point*/
                     fprintf(outputfile,"%-12g\n",floatingPoint(lineBuffer,bias,exponent,fraction));
                 } else if (strcmp(dataType, "u") == 0){/*Unsigned*/
-                    fprintf(outputfile,"%d ", binaryToInt(lineBuffer, 8 * size));
+                    fprintf(outputfile,"%u ", binaryToInt(lineBuffer, 8 * size));
                 } else {/*2's complement integer*/
                     fprintf(outputfile,"%d ", twosComplement(lineBuffer, size));
                 }
