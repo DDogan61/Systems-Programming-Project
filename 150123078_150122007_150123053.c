@@ -41,8 +41,8 @@ void hexToBinary(const char *hex, char *binary) {
     }
 }
 /*Function for converting Binary to Integer*/
-unsigned long int binaryToInt(char *binary, int length) {
-    unsigned long int decimal = 0;
+unsigned int binaryToInt(char *binary, int length) {
+    unsigned int decimal = 0;
     int count = 0;
     while (*binary && count < length) {
         decimal = decimal * 2 + (*binary - '0');
